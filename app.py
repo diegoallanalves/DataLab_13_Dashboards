@@ -139,13 +139,13 @@ if page.startswith('01'):
         fig=px.bar(metrics,x='Metric',y='Score',color='Metric',text='Score',range_y=[0,1],title='Holdout evaluation')
         fig.update_traces(texttemplate='%{text:.2f}',textposition='outside')
         fig.update_layout(showlegend=False,height=340)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     with right:
         st.subheader('🎯 Confusion matrix')
         cm=confusion_matrix(y_test,pred,labels=[0,1])
         fig=px.imshow(cm,x=['Predicted stay','Predicted churn'],y=['Actual stay','Actual churn'],text_auto=True,color_continuous_scale=[[0,'#182b55'],[.5,'#4a48bc'],[1,'#15d9b5']],title='Classification counts')
         fig.update_layout(height=340,coloraxis_showscale=False)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     a,b,c=st.columns(3)
     with a:
         st.subheader('🔍 Feature importance')
@@ -155,13 +155,13 @@ if page.startswith('01'):
             imp=pd.DataFrame({'Feature':X.columns,'Importance':abs(model.named_steps['logisticregression'].coef_[0])}).sort_values('Importance')
         fig=px.bar(imp,x='Importance',y='Feature',orientation='h',color='Importance',color_continuous_scale=['#3b7cff','#855bff','#0cd7b1'])
         fig.update_layout(height=360,coloraxis_showscale=False)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     with b:
         st.subheader('📈 Probability distribution')
         hist=pd.DataFrame({'Predicted churn probability':probs,'Actual outcome':np.where(y_test.to_numpy()==1,'Churn','Stay')})
         fig=px.histogram(hist,x='Predicted churn probability',color='Actual outcome',nbins=25,barmode='overlay',opacity=.72)
         fig.update_layout(height=360)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     with c:
         st.subheader('📉 ROC curve')
         fpr,tpr,_=roc_curve(y_test,probs)
@@ -169,7 +169,7 @@ if page.startswith('01'):
         fig=px.area(roc_df,x='False positive rate',y='True positive rate',title=f'AUC = {auc:.3f}')
         fig.add_scatter(x=[0,1],y=[0,1],mode='lines',line=dict(color='#8896b5',dash='dash'),name='Random')
         fig.update_layout(height=360)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     low,high=st.columns([1.2,1])
     with low:
         st.subheader('🧭 Customer segments · PCA')
@@ -178,7 +178,7 @@ if page.startswith('01'):
         points=pd.DataFrame({'PC1':xy[:,0],'PC2':xy[:,1],'Outcome':np.where(y==1,'Churn','Stay')})
         fig=px.scatter(points,x='PC1',y='PC2',color='Outcome',opacity=.5,render_mode='webgl')
         fig.update_layout(height=360)
-        st.plotly_chart(fig,use_container_width=True)
+        st.plotly_chart(fig,width='stretch')
     with high:
         st.subheader('🎛️ What-if prediction')
         c1,c2=st.columns(2)
@@ -194,7 +194,7 @@ if page.startswith('01'):
         st.progress(score)
         st.caption('Illustrative estimate from a model trained on synthetic data—not a real customer risk score.')
     with st.expander('📋 Dataset, model notes and downloadable predictions'):
-        st.dataframe(data.head(30),use_container_width=True)
+        st.dataframe(data.head(30),width='stretch')
         export=X_test.copy();export['actual_churn']=y_test;export['predicted_probability']=probs;export['predicted_churn']=pred
         st.download_button('Download holdout predictions',csv_bytes(export),'churn_predictions.csv','text/csv')
         st.info('Training and test data are separated before fitting. The ROC AUC uses predicted probabilities. Threshold changes classification metrics but not ROC AUC. PCA is for visualization, not model training.')
@@ -203,9 +203,9 @@ elif page.startswith('02'):
     st.header('Business Insights Explorer')
     region = st.multiselect('Regions', sorted(df.region.dropna().unique()), default=sorted(df.region.dropna().unique()))
     selected = df[df.region.isin(region)]
-    st.dataframe(selected.head(40), use_container_width=True)
+    st.dataframe(selected.head(40), width='stretch')
     if len(selected):
-        st.plotly_chart(px.bar(selected.groupby('region', as_index=False)['spend'].sum(), x='region', y='spend', title='Revenue by region'), use_container_width=True)
+        st.plotly_chart(px.bar(selected.groupby('region', as_index=False)['spend'].sum(), x='region', y='spend', title='Revenue by region'), width='stretch')
         st.download_button('Download filtered CSV', csv_bytes(selected), 'business_insights.csv', 'text/csv')
 
 elif page.startswith('03'):
@@ -231,7 +231,7 @@ elif page.startswith('04'):
             else:
                 try:
                     conn.execute('PRAGMA query_only = ON')
-                    st.dataframe(pd.read_sql_query(query, conn), use_container_width=True)
+                    st.dataframe(pd.read_sql_query(query, conn), width='stretch')
                 except Exception as exc:
                     st.error(f'Query failed: {exc}')
     st.caption('Demo only: not a production SQL sandbox. Do not connect to privileged databases.')
@@ -244,16 +244,16 @@ elif page.startswith('05'):
     c.metric('Conversion rate', f'{df.converted.mean():.1%}')
     left,right=st.columns(2)
     metrics=customer_metrics(df)
-    left.plotly_chart(px.bar(metrics,x='segment',y='revenue',color='segment',title='Revenue by segment'),use_container_width=True)
-    right.plotly_chart(px.pie(metrics,names='segment',values='customers',hole=.6,title='Customer mix'),use_container_width=True)
+    left.plotly_chart(px.bar(metrics,x='segment',y='revenue',color='segment',title='Revenue by segment'),width='stretch')
+    right.plotly_chart(px.pie(metrics,names='segment',values='customers',hole=.6,title='Customer mix'),width='stretch')
     timeline=(df.assign(order_date=pd.to_datetime(df['order_date'], errors='coerce')).dropna(subset=['order_date']).set_index('order_date').resample('MS')['spend'].sum().reset_index())
-    st.plotly_chart(px.area(timeline,x='order_date',y='spend',title='Monthly revenue trend'),use_container_width=True)
+    st.plotly_chart(px.area(timeline,x='order_date',y='spend',title='Monthly revenue trend'),width='stretch')
 
 elif page.startswith('06'):
     st.header('Customer Behaviour Analytics')
     metrics = customer_metrics(df)
-    st.dataframe(metrics.style.format({'revenue': '${:,.2f}', 'conversion_rate': '{:.1%}'}), use_container_width=True)
-    st.plotly_chart(px.scatter(df, x='visits', y='spend', color='segment', title='Visits vs. spend'), use_container_width=True)
+    st.dataframe(metrics.style.format({'revenue': '${:,.2f}', 'conversion_rate': '{:.1%}'}), width='stretch')
+    st.plotly_chart(px.scatter(df, x='visits', y='spend', color='segment', title='Visits vs. spend'), width='stretch')
     st.caption('Explore segments and behavioural patterns; correlation does not imply causation.')
 
 elif page.startswith('07'):
@@ -268,7 +268,7 @@ elif page.startswith('07'):
         st.markdown('#### 2 · Configure collection')
         pages=st.slider('Pages to request',1,5,2)
         delay=st.slider('Delay between requests (seconds)',0.5,5.0,1.0,0.5)
-        run=st.button('▶ Run educational scraper',type='primary',use_container_width=True)
+        run=st.button('▶ Run educational scraper',type='primary',width='stretch')
         st.markdown('#### 📚 Websites to explore')
         for name,details in SITES.items():
             st.markdown(f"**{name}** — [Visit website]({details['url']})")
@@ -287,7 +287,7 @@ elif page.startswith('07'):
         current_site=st.session_state.get('scrape_site','')
         if not scraped.empty:
             st.success(f'{len(scraped)} records extracted from {current_site}.')
-            st.dataframe(scraped,use_container_width=True,height=330)
+            st.dataframe(scraped,width='stretch',height=330)
             st.download_button('⬇ Export collected CSV',csv_bytes(scraped),'web_scraping_results.csv',mime='text/csv')
         else:
             st.markdown('Run the scraper to see live results. The dashboard will not fabricate scraped records.')
@@ -299,17 +299,17 @@ elif page.startswith('07'):
             m2.metric('Average price',f"£{scraped['Price GBP'].mean():.2f}")
             m3.metric('Average rating',f"{scraped['Rating'].mean():.1f} / 5")
             l,r=st.columns(2)
-            l.plotly_chart(px.histogram(scraped,x='Price GBP',nbins=16,title='Book price distribution',color_discrete_sequence=['#9b55ff']),use_container_width=True)
+            l.plotly_chart(px.histogram(scraped,x='Price GBP',nbins=16,title='Book price distribution',color_discrete_sequence=['#9b55ff']),width='stretch')
             ratings=scraped.groupby('Rating',as_index=False).agg(Books=('Title','count'),Average_Price=('Price GBP','mean'))
-            r.plotly_chart(px.bar(ratings,x='Rating',y='Average_Price',color='Rating',title='Average price by rating',text_auto='.2f'),use_container_width=True)
-            st.plotly_chart(px.bar(ratings,x='Rating',y='Books',title='Books by star rating',color='Rating',text_auto=True),use_container_width=True)
+            r.plotly_chart(px.bar(ratings,x='Rating',y='Average_Price',color='Rating',title='Average price by rating',text_auto='.2f'),width='stretch')
+            st.plotly_chart(px.bar(ratings,x='Rating',y='Books',title='Books by star rating',color='Rating',text_auto=True),width='stretch')
         elif current_site=='Quotes to Scrape':
             m1,m2=st.columns(2)
             m1.metric('Quotes',len(scraped));m2.metric('Authors',scraped['Author'].nunique())
             counts=scraped['Author'].value_counts().head(12).rename_axis('Author').reset_index(name='Quotes')
-            st.plotly_chart(px.bar(counts,x='Quotes',y='Author',orientation='h',color='Quotes',title='Most frequent authors'),use_container_width=True)
+            st.plotly_chart(px.bar(counts,x='Quotes',y='Author',orientation='h',color='Quotes',title='Most frequent authors'),width='stretch')
             tags=scraped['Tags'].str.split(', ').explode().value_counts().head(12).rename_axis('Tag').reset_index(name='Count')
-            st.plotly_chart(px.bar(tags,x='Tag',y='Count',color='Count',title='Common quote tags'),use_container_width=True)
+            st.plotly_chart(px.bar(tags,x='Tag',y='Count',color='Count',title='Common quote tags'),width='stretch')
 
 elif page.startswith('08'):
     st.header('Smart Data Importer')
@@ -340,7 +340,7 @@ elif page.startswith('09'):
         elif kind == 'Bar': fig = px.bar(df.groupby(x, as_index=False)[y].mean(), x=x, y=y)
         elif kind == 'Histogram': fig = px.histogram(df, x=y)
         else: fig = px.box(df, x=x, y=y)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         st.info('Import a dataset with numeric columns to enable charts.')
 
@@ -349,13 +349,13 @@ elif page.startswith('10'):
     report = quality_report(df)
     st.metric('Duplicate rows', int(df.duplicated().sum()))
     st.metric('Missing cells', int(df.isna().sum().sum()))
-    st.dataframe(report, use_container_width=True)
+    st.dataframe(report, width='stretch')
     a,b=st.columns(2)
-    a.plotly_chart(px.bar(report,x='column',y='null_pct',color='null_pct',title='Missing values (%)'),use_container_width=True)
-    b.plotly_chart(px.bar(report,x='column',y='distinct',color='distinct',title='Unique values by column'),use_container_width=True)
+    a.plotly_chart(px.bar(report,x='column',y='null_pct',color='null_pct',title='Missing values (%)'),width='stretch')
+    b.plotly_chart(px.bar(report,x='column',y='distinct',color='distinct',title='Unique values by column'),width='stretch')
     
     if df.isna().any().any():
-        st.plotly_chart(px.imshow(df.isna().astype(int).head(70).T, color_continuous_scale=['#1dd7ba','#fb5c83'], aspect='auto', title='Null map · first 70 rows', labels={'color':'Missing'}), use_container_width=True)
+        st.plotly_chart(px.imshow(df.isna().astype(int).head(70).T, color_continuous_scale=['#1dd7ba','#fb5c83'], aspect='auto', title='Null map · first 70 rows', labels={'color':'Missing'}), width='stretch')
     else:
         st.success('All fields are complete: no missing values detected in this dataset.')
     st.download_button('Export quality report', csv_bytes(report), 'quality_report.csv')
@@ -386,7 +386,7 @@ elif page.startswith('12'):
         clusters = st.slider('K-Means clusters', 2, min(8, len(df)), 3)
         enriched['cluster'] = KMeans(n_clusters=clusters, random_state=42, n_init=10).fit_predict(StandardScaler().fit_transform(features))
         st.dataframe(enriched.head(20))
-        st.plotly_chart(px.scatter(enriched, x='visits', y='spend', color=enriched.cluster.astype(str), title='Behavioural clusters'), use_container_width=True)
+        st.plotly_chart(px.scatter(enriched, x='visits', y='spend', color=enriched.cluster.astype(str), title='Behavioural clusters'), width='stretch')
         st.download_button('Download enriched data', csv_bytes(enriched), 'enriched.csv')
     else:
         st.info('This module requires spend and visits numeric columns and at least three rows.')
@@ -408,5 +408,5 @@ elif page.startswith('13'):
     c.metric('Absolute lift', f"{result['absolute_lift_pp']:.2f} pp")
     st.write('Relative uplift:', f"{result['relative_uplift_pct']:.1f}%" if result['relative_uplift_pct'] is not None else 'Undefined (zero control rate)')
     bars=pd.DataFrame({'Group':['Test','Control'],'Conversion rate':[result['test_rate'],result['control_rate']]})
-    st.plotly_chart(px.bar(bars,x='Group',y='Conversion rate',color='Group',text='Conversion rate',title='A/B conversion comparison'),use_container_width=True)
+    st.plotly_chart(px.bar(bars,x='Group',y='Conversion rate',color='Group',text='Conversion rate',title='A/B conversion comparison'),width='stretch')
     st.caption('For causal claims, verify randomization, sample size, confidence intervals, statistical significance and guardrail metrics.')

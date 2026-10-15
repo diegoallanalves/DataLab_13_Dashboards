@@ -1,0 +1,13 @@
+DataLab 13 README based on the uploaded app.py, core.py, scraping.py and requirements.txt.
+
+1. Extract this ZIP into the project folder: 91_Full_Data_Processing (the folder with app.py).
+2. Replace README.md and merge the assets/ folder.
+3. Open PowerShell IN THE DATALAB PROJECT FOLDER (not 75_filtrify).
+4. Run:
+   git remote -v
+   git add README.md assets
+   git commit -m "Document real DataLab 13 code and add authentic dashboard and founder photo"
+   git push origin main
+5. Refresh https://github.com/diegoallanalves/DataLab_13_Dashboards
+
+The image assets include the user's actual Streamlit screenshot and founder photo.
